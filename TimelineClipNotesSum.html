@@ -1,0 +1,148 @@
+<!-- MIT License
+
+Copyright (c) 2023 Kåre Nejmann post@kan.dk
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Timeline Clip Notes sum</title>
+  <style>
+    body {
+      font-family: sans-serif
+    }
+
+    thead {
+      background-color: lightblue
+    }
+
+    table,
+    td {
+      border-color: black;
+      border-style: solid;
+      border-width: 1px;
+      border-collapse: collapse;
+      padding: 0px 10px;
+    }
+
+    table a {
+      background-color: lightyellow
+    }
+
+    .collapsible {
+      background-color: #ddd;
+      cursor: pointer;
+      padding: 10px;
+      text-align: left;
+      outline: none;
+      border: none;
+    }
+
+    #warn {
+      font-size: x-large;
+      color: red;
+    }
+
+    .help {
+      background-color: #ddd;
+      padding: 0 18px;
+    }
+
+    em {
+      font-style: normal;
+      font-weight: bold;
+    }
+
+    #statistik {
+      font-weight: bold;
+    }
+
+    #diagnose {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <p id="warn"></p>
+  <h1>Timeline Clip Notes sum calculator</h1>
+  <p>
+    This tool parses Timeline Clip Notes from Media Composer and sums the duration of clips that share the same name.
+    If clips with the same name overlap in time they are only counted once. Thus a twenty second music clip on two mono
+    tracks are only counted as twenty seconds.
+    Usefull for music reporting.
+
+    The tool also lists all Timeline Clip Notes with timecode, name and note.
+  </p>
+  <p>Use the tool at your own risk. I've tested it for my use only.</p>
+  <details class="help">
+    <summary>Help</summary>
+    <ol>
+      <p>In Media Composer:</p>
+      <li>Select the relevant clips in your sequence. Right click and select Add Timeline Clip Note. Write a note.</li>
+      <li>Open the Timeline Clip Notes window from the Tools menu and make sure the columns are shown in this order:
+        <em>Clip Name, Start, End, Duration, Track, Timeline Note.</em>
+      </li>
+      <li>Save your notes by right clicking in the window → save.</li>
+      <p>On this page:</p>
+      <li>Drag the file onto the button below "input".</li>
+      <li>Your lists appear below. Select the text, copy it and paste it into a text editor, spreadsheet or where you
+        need it.</li>
+      <li>Be sure to give the results a sanity check.</li>
+    </ol>
+  </details>
+
+  <h2>Input</h2>
+
+  <p>
+    <input type="file" id="txtfiletoread" name="Sequence Report" /> Choose your Timeline Clip Notes file or drag it onto
+    the button.
+  </p>
+  <textarea id="input" cols="120" rows="10" autofocus="0" autocomplete="off" placeholder="..." spellcheck="false"
+    oninput="convert()"></textarea>
+
+  <p>
+  <h2 style="display: inline-block;">Total duration</h2>
+  <input id="showFrames" type="checkbox" onchange="convert()">Show frames <input id="showSeconds" type="checkbox"
+    onchange="convert()">Show seconds.
+  <!-- Only include if note text includes: <input id="noteFilterText" type="text" onchange="convert()"> -->
+  </p>
+  <div id="sums">
+    <table></table>
+  </div>
+  <div id="statistics">
+  </div>
+
+  <hr>
+  <h2>Notes and timecodes</h2>
+  <div id="list">
+    <table></table>
+  </div>
+  <hr>
+  <div id="diagnose"></div>
+
+  <script src="TimelineClipNotesSum.js"></script>
+
+</body>
+
+</html>
