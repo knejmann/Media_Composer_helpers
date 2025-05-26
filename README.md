@@ -1,4 +1,4 @@
-# Media_Composer_helpers
+# Media Composer helpers
 
 These are some tools I've created to process metadata from Avid Media Composer timelines.
 
