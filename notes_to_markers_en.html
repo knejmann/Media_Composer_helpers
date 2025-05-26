@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Converts text notes to Media Composer markers</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        #discart {
+            color: red;
+            font-family: monospace;
+        }
+
+        kbd.key {
+            border-radius: 3px;
+            padding: 1px 2px 0;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Konvert notes to Markers</h1>
+    <p>Paste the text into the text field below</p>
+    <p>Every line must begin with the timecode written as hours (optional), minutes and seconds. The numbers can be
+        seperated by any of these characters: , . ; : '</p>
+    <p>Lines that cannot be parsed are shown below the text field.</p>
+    <h2>Input</h2>
+    <p><input type="file" id="txtfiletoread" name="NotesText" /></p>
+    <textarea id="input" cols="120" rows="10" autofocus="1" autocomplete="off"
+        placeholder="paste tekst her - eller åbn en tekstfil" spellcheck="false" oninput="convert()"></textarea>
+
+    <div id="discart"></div>
+
+    <h2>Markers</h2>
+    <label for="markerColor">Color</label>
+    <select id="markerColor" onchange="convert()">
+        <option value="Red">Red</option>
+        <option value="Green">Green</option>
+        <option value="Blue">Blue</option>
+        <option value="Cyan">Cyan</option>
+        <option value="Magenta">Magenta</option>
+        <option value="Yellow">Yellow</option>
+        <option value="Black">Black</option>
+        <option value="White">White</option>
+    </select>
+    <label for="markerTrackType">Track</label>
+    <select id="markerTrackType" onchange="convert()">
+        <option value="V10">V10</option>
+        <option value="V9">V9</option>
+        <option value="V8">V8</option>
+        <option value="V7">V7</option>
+        <option value="V6">V6</option>
+        <option value="V5">V5</option>
+        <option value="V4">V4</option>
+        <option value="V3">V3</option>
+        <option value="V2">V2</option>
+        <option value="V1" selected>V1</option>
+        <option value="A1">A1</option>
+        <option value="A2">A2</option>
+        <option value="A3">A3</option>
+        <option value="A4">A4</option>
+        <option value="A5">A5</option>
+        <option value="A6">A6</option>
+        <option value="A7">A7</option>
+        <option value="A8">A8</option>
+        <option value="A9">A9</option>
+        <option value="A10">A10</option>
+        <option value="TC">TC</option>
+    </select>
+    <p> <textarea id="output" cols="120" rows="10"></textarea></p>
+
+    <button onclick="copyOutput()">Copy output.</button>
+    Paste with <kbd class="key">ctrl</kbd> + <kbd class="key">v</kbd> into the Markers window in Media Composer<br />
+    <h2>Stats</h2>
+    <table>
+        <tr>
+            <td id="linesin"></td>
+            <td>Lines in including blank</td>
+        </tr>
+        <tr>
+            <td id="existing"></td>
+            <td>Lines from input added to an existing timecode</td>
+        </tr>
+        <tr>
+            <td id="discarted"></td>
+            <td>Lines discarded</td>
+        </tr>
+        <tr>
+            <td id="markersOut"></td>
+            <td>Markers output</td>
+        </tr>
+    </table>
+
+    <script>
+        function convert() {
+            var textInput = document.getElementById("input").value;
+            var markerColor = document.getElementById("markerColor").value;
+            var markerTrackType = document.getElementById("markerTrackType").value;
+            var notesCount = 0;
+            var inputLines;
+            var numberOfMarkers = 0;
+            var duplicatetimecodes = 0;
+            var markersOut = "";
+            var discartedLines = [];
+            var arrayOfTimecodes = {}; //array med tidskoder og beskrivelser
+
+            inputLines = textInput.split("\n"); // split the list into an array - one item pr. line
+
+            for (const linje of inputLines) {
+                // iterate over the array
+                el = linje
+                    .trim()
+                    .match(/^\s*(?:(\d{1,2})[:;,.'])?(\d{1,2})[:;,.'](\d{1,2}):?\s+(.*)$/); // hours are optional and therefore prefixed by a non-matching group (?:  )?
+                if (!el & (linje.length > 0)) {
+                    discartedLines.push(linje);
+                }
+
+                try {
+                    if (typeof el[1] === "undefined") {
+                        hour = "00";
+                    } else {
+                        hour = ("00" + el[1]).slice(-2);
+                    }
+                    minute = ("00" + el[2]).slice(-2);
+                    second = ("00" + el[3]).slice(-2);
+                    // tcIn = el[1] + el[2] + el[3]
+                    tcIn = hour + ":" + minute + ":" + second + ":00";
+                    note = el[4];
+                } catch (error) {
+                    continue;
+                }
+
+                if (!arrayOfTimecodes[tcIn]) {
+                    arrayOfTimecodes[tcIn] = [];
+                }
+                arrayOfTimecodes[tcIn].push({ note: note });
+            }
+
+            // console.log(discartedLines)
+
+            for (a in arrayOfTimecodes) {
+                const notes = arrayOfTimecodes[a];
+                markersOut +=
+                    a + "\t" + markerTrackType + "\t" + markerColor + "\t" + notes[0].note; // adds the line to the output
+                numberOfMarkers++;
+                if (notes.length > 1) {
+                    for (let ekstranoter = 1; ekstranoter < notes.length; ekstranoter++) {
+                        markersOut += "; " + notes[ekstranoter].note;
+                        duplicatetimecodes++;
+                    }
+                }
+                markersOut += "\n";
+            }
+
+            // Writing to DOM
+            if (discartedLines.length > 0) {
+                document.getElementById("discart").innerHTML =
+                    "Discarted lines:<br /> " + discartedLines.join("<br />");
+            } else {
+                document.getElementById("discart").innerHTML = "";
+            }
+            document.getElementById("output").value = markersOut; // writing output to textarea#output.
+            document.getElementById("linesin").innerHTML = inputLines.length;
+            document.getElementById("existing").innerHTML = duplicatetimecodes;
+            document.getElementById("discarted").innerHTML = discartedLines.length;
+            document.getElementById("markersOut").innerHTML = numberOfMarkers;
+        }
+
+        function copyOutput(params) {
+            var copyText = document.getElementById("output"); // Get the text field
+            copyText.select(); // Select the text field
+            document.execCommand("copy"); // Copy the text inside the text field
+        }
+
+        // file input to the input field
+        window.onload = function () {
+            //Check the support for the File API support
+            if (window.File && window.FileReader && window.FileList && window.Blob) {
+                var fileSelected = document.getElementById("txtfiletoread");
+                fileSelected.addEventListener(
+                    "change",
+                    function (e) {
+                        //Set the extension for the file
+                        var fileExtension = /text.*/;
+                        //Get the file object
+                        var fileTobeRead = fileSelected.files[0];
+                        //Check of the extension match
+                        if (fileTobeRead.type.match(fileExtension)) {
+                            //Initialize the FileReader object to read the 2file
+                            var fileReader = new FileReader();
+                            fileReader.onload = function (e) {
+                                var fileContents = document.getElementById("input");
+                                fileContents.value = fileReader.result;
+                                convert();
+                            };
+                            fileReader.readAsText(fileTobeRead, "UTF-8");
+                        } else {
+                            alert("Please select text file");
+                        }
+                    },
+                    false
+                );
+            } else {
+                alert("Files are not supported");
+            }
+        };
+
+    </script>
+
+</body>
+
+</html>
