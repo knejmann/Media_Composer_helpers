@@ -17,8 +17,6 @@ This tool reads loosly structured timecode notes like below and outputs them in 
 1:00:22 Music louder
 ```
 
-Note: Pasting markers into Media Composer seems to be broken in MC 2024.12 on windows.
-
 ## Usage
 
 Download the html file you need and launch it in a browser.
